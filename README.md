@@ -33,7 +33,7 @@ For a limited time, a default API key has been provided. However, in the future,
 4. Open your browser and visit `http://localhost:8080`.
 
 ## Screenshots
-![Weather App Screenshot](working.png)
+![Weather App Screenshot](https://github.com/dikshant945/weatherAppSpringBootJava/blob/master/src/main/resources/static/working.png)
 
 
 ## Future Improvements
