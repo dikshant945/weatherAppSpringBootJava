@@ -24,7 +24,10 @@
         </div>
     </div>
 
-    <!-- Weather Details -->
+    <!-- Error Message (Hidden by Default) -->
+    <p id="errorMessage" class="text-danger" style="display: none;"></p>
+
+    <!-- Weather Details (Hidden by Default) -->
     <div id="weatherDetails" style="display: none;">
         <h4>Weather in <span id="displayCity"></span>, <span id="displayCountry"></span></h4>
         <p><strong>Condition:</strong> <span id="weatherMain"></span> - <span id="weatherDescription"></span></p>
@@ -33,34 +36,49 @@
         <p><strong>Pressure:</strong> <span id="pressure"></span> hPa</p>
         <p><strong>Wind Speed:</strong> <span id="windSpeed"></span> km/h</p>
     </div>
-</div>
 
-<script>
+
+    <script>
     function fetchWeather() {
-        const cityName = document.getElementById("cityName").value;
-        const country = document.getElementById("country").value;
+    const cityName = document.getElementById("cityName").value;
+    const country = document.getElementById("country").value;
 
-        if (!cityName || !country) {
-            alert("Please enter both city and country.");
-            return;
-        }
-
-        fetch(`/getCurrentWeather?cityName=${cityName}&country=${country}`)
-            .then(response => response.json())
-            .then(data => {
-                document.getElementById("displayCity").textContent = data.cityName;
-                document.getElementById("displayCountry").textContent = data.country;
-                document.getElementById("weatherMain").textContent = data.weatherMain;
-                document.getElementById("weatherDescription").textContent = data.weatherDescription;
-                document.getElementById("tempValue").textContent = data.tempValue;
-                document.getElementById("humidity").textContent = data.humidity;
-                document.getElementById("pressure").textContent = data.pressure;
-                document.getElementById("windSpeed").textContent = data.windSpeed;
-
-                document.getElementById("weatherDetails").style.display = "block";
-            })
-            .catch(error => console.error("Error fetching weather:", error));
+    if (!cityName || !country) {
+        alert("Please enter both city and country.");
+        return;
     }
+
+    fetch(`/getCurrentWeather?cityName=${cityName}&country=${country}`)
+        .then(response => response.json())
+        .then(data => {
+            // Check for errors from backend
+            if (data.error) {
+                document.getElementById("weatherDetails").style.display = "none";
+                document.getElementById("errorMessage").textContent = data.error;
+                document.getElementById("errorMessage").style.display = "block";
+                return;
+            }
+
+            // Populate UI with weather details
+            document.getElementById("displayCity").textContent = data.cityName;
+            document.getElementById("displayCountry").textContent = data.country;
+            document.getElementById("weatherMain").textContent = data.weatherMain;
+            document.getElementById("weatherDescription").textContent = data.weatherDescription;
+            document.getElementById("tempValue").textContent = data.tempValue;
+            document.getElementById("humidity").textContent = data.humidity;
+            document.getElementById("pressure").textContent = data.pressure;
+            document.getElementById("windSpeed").textContent = data.windSpeed;
+
+            document.getElementById("weatherDetails").style.display = "block";
+            document.getElementById("errorMessage").style.display = "none";
+        })
+        .catch(error => {
+            document.getElementById("errorMessage").textContent = "Failed to fetch weather data.";
+            document.getElementById("errorMessage").style.display = "block";
+            console.error("Error fetching weather:", error);
+        });
+}
+
 </script>
 
 </body>
