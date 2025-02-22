@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Weather App</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <style>
+        body {
+            background: linear-gradient(135deg, #00B4DB, #0083B0);
+            color: #2C3E50;
+            font-family: 'Segoe UI', Arial, sans-serif;
+            min-height: 100vh;
+            padding: 20px 0;
+        }
+        .container {
+            max-width: 900px;
+            background: rgba(255, 255, 255, 0.95);
+            padding: 30px;
+            border-radius: 20px;
+            margin-top: 30px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+        }
+        .weather-icon {
+            font-size: 60px;
+            margin: 10px 0;
+            color: #3498DB;
+        }
+        .main-temp {
+            font-size: 3rem;
+            font-weight: 300;
+            margin: 15px 0;
+            color: #2C3E50;
+        }
+        .unit-toggle {
+            cursor: pointer;
+            color: #3498DB;
+            text-decoration: none;
+            font-size: 0.9rem;
+            background: rgba(52, 152, 219, 0.1);
+            padding: 4px 8px;
+            border-radius: 12px;
+            margin-left: 10px;
+            transition: all 0.3s ease;
+        }
+        .unit-toggle:hover {
+            background: rgba(52, 152, 219, 0.2);
+        }
+        .feels-like {
+            font-size: 1.1rem;
+            color: #7F8C8D;
+        }
+        .weather-section {
+            background: rgba(255, 255, 255, 0.8);
+            padding: 20px;
+            border-radius: 15px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+        }
+        .section-title {
+            font-weight: 600;
+            color: #34495E;
+            margin-bottom: 15px;
+            font-size: 1.2rem;
+        }
+        .details-table td {
+            padding: 12px 0;
+            font-size: 1.1rem;
+        }
+        .details-table td:first-child {
+            color: #7F8C8D;
+            padding-right: 20px;
+        }
+        .wind-speed h2 {
+            color: #3498DB;
+            font-size: 2rem;
+            font-weight: 300;
+            margin-bottom: 10px;
+        }
+        .historical-table {
+            background: white;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+        }
+        .historical-table th {
+            background: #3498DB;
+            color: white;
+            padding: 15px;
+            font-weight: 500;
+        }
+        .historical-table td {
+            padding: 12px 15px;
+            border-bottom: 1px solid #ECF0F1;
+        }
+        .btn-primary {
+            background: #3498DB;
+            border: none;
+            padding: 8px 20px;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+        }
+        .btn-primary:hover {
+            background: #2980B9;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(52, 152, 219, 0.3);
+        }
+        .form-control {
+            border-radius: 8px;
+            border: 1px solid #BDC3C7;
+            padding: 10px 15px;
+            transition: all 0.3s ease;
+        }
+        .form-control:focus {
+            border-color: #3498DB;
+            box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.2);
+        }
+        .date-filters {
+            background: rgba(255, 255, 255, 0.9);
+            padding: 20px;
+            border-radius: 15px;
+            margin: 20px 0;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+        }
+        .weather-tabs button {
+            padding: 8px 20px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            transition: all 0.3s ease;
+        }
+        .weather-tabs button:hover {
+            transform: translateY(-2px);
+        }
+        .error-message {
+            color: #E74C3C;
+            background: rgba(231, 76, 60, 0.1);
+            padding: 10px 15px;
+            border-radius: 8px;
+            font-size: 0.9rem;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="text-center mb-4">
+        <div class="row">
+            <div class="col-md-5">
+                <input type="text" id="cityName" class="form-control" placeholder="Enter City" required>
+            </div>
+            <div class="col-md-5">
+                <input type="text" id="country" class="form-control" placeholder="Enter Country (e.g. IN)" required>
+            </div>
+            <div class="col-md-2">
+                <button type="button" class="btn btn-primary" onclick="fetchWeather()">Get Weather</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="date-filters">
+        <div class="row">
+            <div class="col-md-4">
+                <label>From Date:</label>
+                <input type="date" id="fromDate" class="form-control">
+            </div>
+            <div class="col-md-4">
+                <label>To Date:</label>
+                <input type="date" id="toDate" class="form-control">
+            </div>
+            <div class="col-md-4">
+                <button type="button" class="btn btn-secondary mt-4" onclick="fetchHistoricalData()">Get Historical Data</button>
+            </div>
+        </div>
+    </div>
+
+    <p id="errorMessage" class="error-message mt-3" style="display: none;"></p>
+
+    <div id="weatherDetails" class="mt-4" style="display: none;">
+        <div class="weather-section">
+            <h3 class="mb-4">Weather in <span id="displayCity"></span>, <span id="displayCountry"></span></h3>
+            <div class="row align-items-center">
+                <div class="col-md-6">
+                    <div class="main-temp d-flex align-items-center">
+                        <span id="tempValue"></span>°<span id="tempUnit">C</span>
+                        <span class="unit-toggle" onclick="toggleTemperatureUnit()">Switch to °<span id="altUnit">F</span></span>
+                    </div>
+                    <div class="feels-like">
+                        Feels like <span id="feelsLike"></span>°<span id="feelsLikeUnit">C</span>
+                    </div>
+                </div>
+                <div class="col-md-6 text-center">
+                    <div class="weather-icon">
+                        <i class="fas fa-cloud"></i>
+                    </div>
+                    <p class="weather-description">
+                        <span id="weatherMain" class="fw-bold"></span> -
+                        <span id="weatherDescription" class="text-muted"></span>
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <hr>
+
+        <div class="weather-section">
+            <div class="section-title">Current Details</div>
+            <table class="details-table">
+                <tr>
+                    <td>Humidity</td>
+                    <td><span id="humidity"></span>%</td>
+                </tr>
+                <tr>
+                    <td>Pressure</td>
+                    <td><span id="pressure"></span> hPa</td>
+                </tr>
+            </table>
+        </div>
+
+        <hr>
+
+        <div class="weather-section">
+            <div class="section-title">Wind</div>
+            <div class="wind-speed">
+                <h2><span id="windSpeed"></span> km/h</h2>
+                <i class="fas fa-wind"></i>
+            </div>
+        </div>
+
+        <div id="historicalData" class="historical-data">
+            <div class="weather-tabs mb-3">
+                <button class="btn btn-primary me-2" onclick="showTab('daily')">Daily Forecast</button>
+                <button class="btn btn-outline-primary" onclick="showTab('hourly')">Hourly Forecast</button>
+            </div>
+
+            <div id="dailyForecast" class="forecast-tab">
+                <h4>Weather Forecast</h4>
+                <div class="table-responsive">
+                    <table class="historical-table table">
+                        <thead>
+                        <tr>
+                            <th>Date & Time</th>
+                            <th>Temperature</th>
+                            <th>Condition</th>
+                            <th>Humidity</th>
+                            <th>Wind Speed</th>
+                        </tr>
+                        </thead>
+                        <tbody id="dailyTableBody"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div id="hourlyForecast" class="forecast-tab" style="display: none;">
+                <h4>24-Hour Forecast</h4>
+                <div class="table-responsive">
+                    <table class="historical-table table">
+                        <thead>
+                        <tr>
+                            <th>Time</th>
+                            <th>Temperature</th>
+                            <th>Weather</th>
+                            <th>Humidity</th>
+                            <th>Wind Speed</th>
+                        </tr>
+                        </thead>
+                        <tbody id="hourlyTableBody"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    let isCelsius = true;
+    let currentTemp = 0;
+    let currentFeelsLike = 0;
+
+    function toggleTemperatureUnit() {
+        isCelsius = !isCelsius;
+        const tempUnit = isCelsius ? 'C' : 'F';
+        const altUnit = isCelsius ? 'F' : 'C';
+
+        // Update temperature display
+        const convertedTemp = isCelsius ? currentTemp : (currentTemp * 9/5) + 32;
+        const convertedFeelsLike = isCelsius ? currentFeelsLike : (currentFeelsLike * 9/5) + 32;
+
+        document.getElementById('tempValue').textContent = Math.round(convertedTemp);
+        document.getElementById('tempUnit').textContent = tempUnit;
+        document.getElementById('altUnit').textContent = altUnit;
+        document.getElementById('feelsLike').textContent = Math.round(convertedFeelsLike);
+        document.getElementById('feelsLikeUnit').textContent = tempUnit;
+
+        // Refresh historical data display if it exists
+        const historicalData = document.getElementById('historicalData');
+        if (historicalData.style.display !== 'none') {
+            fetchHistoricalData();
+        }
+    }
+
+    function fetchHistoricalData() {
+        const cityName = document.getElementById("cityName").value;
+        const country = document.getElementById("country").value;
+        const fromDate = document.getElementById("fromDate").value;
+        const toDate = document.getElementById("toDate").value;
+
+        if (!cityName || !country || !fromDate || !toDate) {
+            document.getElementById("errorMessage").textContent = "Please fill in all fields";
+            document.getElementById("errorMessage").style.display = "block";
+            return;
+        }
+
+        fetch(`/getHistoricalWeather?cityName=${cityName}&country=${country}&fromDate=${fromDate}&toDate=${toDate}`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.error) {
+                    throw new Error(data.error);
+                }
+                displayHistoricalData(data);
+            })
+            .catch(error => {
+                document.getElementById("errorMessage").textContent = error.message || "Failed to fetch historical data";
+                document.getElementById("errorMessage").style.display = "block";
+            });
+    }
+
+    function showTab(tab) {
+        document.getElementById('dailyForecast').style.display = tab === 'daily' ? 'block' : 'none';
+        document.getElementById('hourlyForecast').style.display = tab === 'hourly' ? 'block' : 'none';
+    }
+
+    function displayHistoricalData(data) {
+        const dailyTableBody = document.getElementById('dailyTableBody');
+        const hourlyTableBody = document.getElementById('hourlyTableBody');
+
+        // Clear existing data
+        dailyTableBody.innerHTML = '';
+        hourlyTableBody.innerHTML = '';
+
+        try {
+            // Since we have a single list, let's display it in the daily forecast table
+            data.forEach(item => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${item.date || 'N/A'}</td>
+                    <td>
+                        ${isCelsius ? item.temperature : Math.round((parseFloat(item.temperature) * 9/5) + 32)}°${isCelsius ? 'C' : 'F'}
+                    </td>
+                    <td>
+                        ${item.condition || 'N/A'}
+                    </td>
+                    <td>${item.humidity || 'N/A'}%</td>
+                    <td>${item.windSpeed || 'N/A'} km/h</td>
+                `;
+                dailyTableBody.appendChild(row);
+            });
+
+            // Show the historical data section and default to daily tab
+            document.getElementById('historicalData').style.display = 'block';
+            showTab('daily');
+
+            // Hide hourly forecast since we don't have that data
+            document.querySelector('[onclick="showTab(\'hourly\')"]').style.display = 'none';
+        } catch (error) {
+            console.error('Error displaying weather data:', error);
+            document.getElementById("errorMessage").textContent = "Error displaying weather data";
+            document.getElementById("errorMessage").style.display = "block";
+        }
+    }
+
+    function fetchWeather() {
+        const cityName = document.getElementById("cityName").value;
+        const country = document.getElementById("country").value;
+
+        if (!cityName || !country) {
+            document.getElementById("errorMessage").textContent = "Please enter both city and country.";
+            document.getElementById("errorMessage").style.display = "block";
+            return;
+        }
+
+        // Hide any previous error messages
+        document.getElementById("errorMessage").style.display = "none";
+
+        // Fetch current weather
+        fetch(`/getCurrentWeather?cityName=${cityName}&country=${country}`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.error) {
+                    throw new Error(data.error);
+                }
+
+                // Store the temperature values globally
+                currentTemp = parseFloat(data.tempValue);
+                currentFeelsLike = parseFloat(data.feelsLike || data.tempValue);
+
+                document.getElementById("displayCity").textContent = data.cityName;
+                document.getElementById("displayCountry").textContent = data.country;
+                document.getElementById("weatherMain").textContent = data.weatherMain;
+                document.getElementById("weatherDescription").textContent = data.weatherDescription;
+                document.getElementById("tempValue").textContent = isCelsius ? Math.round(currentTemp) : Math.round((currentTemp * 9/5) + 32);
+                document.getElementById("feelsLike").textContent = isCelsius ? Math.round(currentFeelsLike) : Math.round((currentFeelsLike * 9/5) + 32);
+                document.getElementById("humidity").textContent = data.humidity;
+                document.getElementById("pressure").textContent = data.pressure;
+                document.getElementById("windSpeed").textContent = data.windSpeed;
+
+                document.getElementById("weatherDetails").style.display = "block";
+
+                // Automatically fetch historical data
+                fetchHistoricalData();
+            })
+            .catch(error => {
+                document.getElementById("errorMessage").textContent = error.message || "Failed to fetch weather data.";
+                document.getElementById("errorMessage").style.display = "block";
+                document.getElementById("weatherDetails").style.display = "none";
+            });
+    }
+</script>
+</body>
+</html>
