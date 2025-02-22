@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Weather App</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+<div class="container mt-5">
+    <h2 class="text-center">Weather App</h2>
+
+    <!-- Weather Form -->
+    <div class="mb-4">
+        <div class="row">
+            <div class="col-md-4">
+                <input type="text" id="cityName" class="form-control" placeholder="Enter City" required>
+            </div>
+            <div class="col-md-4">
+                <input type="text" id="country" class="form-control" placeholder="Enter Country (e.g. IN)" required>
+            </div>
+            <div class="col-md-4">
+                <button type="button" class="btn btn-primary" onclick="fetchWeather()">Get Weather</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Weather Details -->
+    <div id="weatherDetails" style="display: none;">
+        <h4>Weather in <span id="displayCity"></span>, <span id="displayCountry"></span></h4>
+        <p><strong>Condition:</strong> <span id="weatherMain"></span> - <span id="weatherDescription"></span></p>
+        <p><strong>Temperature:</strong> <span id="tempValue"></span>°C</p>
+        <p><strong>Humidity:</strong> <span id="humidity"></span>%</p>
+        <p><strong>Pressure:</strong> <span id="pressure"></span> hPa</p>
+        <p><strong>Wind Speed:</strong> <span id="windSpeed"></span> km/h</p>
+    </div>
+</div>
+
+<script>
+    function fetchWeather() {
+        const cityName = document.getElementById("cityName").value;
+        const country = document.getElementById("country").value;
+
+        if (!cityName || !country) {
+            alert("Please enter both city and country.");
+            return;
+        }
+
+        fetch(`/getCurrentWeather?cityName=${cityName}&country=${country}`)
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById("displayCity").textContent = data.cityName;
+                document.getElementById("displayCountry").textContent = data.country;
+                document.getElementById("weatherMain").textContent = data.weatherMain;
+                document.getElementById("weatherDescription").textContent = data.weatherDescription;
+                document.getElementById("tempValue").textContent = data.tempValue;
+                document.getElementById("humidity").textContent = data.humidity;
+                document.getElementById("pressure").textContent = data.pressure;
+                document.getElementById("windSpeed").textContent = data.windSpeed;
+
+                document.getElementById("weatherDetails").style.display = "block";
+            })
+            .catch(error => console.error("Error fetching weather:", error));
+    }
+</script>
+
+</body>
+</html>
