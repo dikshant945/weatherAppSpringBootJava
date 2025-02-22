@@ -33,7 +33,7 @@ For a limited time, a default API key has been provided. However, in the future,
 4. Open your browser and visit `http://localhost:8080`.
 
 ## Screenshots
-![Weather App Screenshot](src/main/resources/Templates/index.html)
+![Weather App Screenshot](working.png)
 
 
 ## Future Improvements
