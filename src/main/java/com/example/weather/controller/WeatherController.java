@@ -16,7 +16,7 @@ public class WeatherController {
     private WeatherService weatherService;
 
     @GetMapping("/getCurrentWeather")
-    @ResponseBody // Ensure JSON response
+    @ResponseBody
     public Map<String, String> getWeather(@RequestParam(defaultValue = "Delhi") String cityName,
         @RequestParam(defaultValue = "IN") String country) {
 
